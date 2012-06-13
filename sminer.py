@@ -10,6 +10,11 @@
 # Contributors:
 # <insert name here>
 #
+# Dependencies:
+# - beautifulsoup4
+# - lxml (Hint for windows users: easy_install lxml==2.3)
+# - django (temporary)
+#
 # TODO list:
 # - Retrieve a list of sentences for a word
 # - Specify a source language for a word, or leave undefined
