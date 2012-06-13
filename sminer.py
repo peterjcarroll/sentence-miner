@@ -19,6 +19,7 @@
 # - Output CSV to stdout or to a file specified on the command line
 # - Allow user to specify whether to include all sentences, only the first, random, or prompt (not sure which to default yet)
 # - Allow user to specify how the CSV file is output, with some sensible presets
+# - Find a unicode friendly output method that doesn´t depend on django
 #
 # Possible Future Features:
 # - Import from other sources besides tatoeba.org
@@ -27,8 +28,21 @@
 #
 import urllib2
 from bs4 import BeautifulSoup
-from django.utils.encoding import smart_str
+from django.utils.encoding import smart_str 
 
-page = urllib2.urlopen('http://tatoeba.org/eng/sentences/search?query=plancha&from=spa&to=und').read()
-soup = BeautifulSoup(page)
-print smart_str(soup.prettify()) #TODO: I dont like depending on django here, find an alternative
+def get_sentences_for_word(word, src_lang = 'und', dest_lang = 'und'):
+    url = 'http://tatoeba.org/eng/sentences/search?query=' + word + '&from=' + src_lang + '&to=' + dest_lang
+    page = urllib2.urlopen(url).read()
+    soup = BeautifulSoup(page)
+    sentence_links = soup.select("div.mainSentence div.sentenceContent a")
+    sentences = []
+    for link in sentence_links:
+        sid = link['href'].rpartition('/')[2]
+        translations = []
+        sentence = { 'main': link.string, 'translations': translations }
+        sentences.append(sentence)
+    return sentences
+
+sentences = get_sentences_for_word('plancha', 'spa')
+for sentence in sentences:
+    print smart_str(sentence)
