@@ -39,6 +39,10 @@ def get_sentences_for_word(word, src_lang = 'und', dest_lang = 'und'):
     for link in sentence_links:
         sid = link['href'].rpartition('/')[2]
         translations = []
+        translations_div = soup.select("div#_" + sid + "_translations")[0]
+        trans_sentences_divs = translations_div.select("div.sentence")
+        for div in trans_sentences_divs:
+            translations.append({ 'lang': div.select("img.languageFlag")[0]['alt'], 'translation': div.div.a.string})
         sentence = { 'main': link.string, 'translations': translations }
         sentences.append(sentence)
     return sentences
