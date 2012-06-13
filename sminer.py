@@ -47,6 +47,10 @@ def get_sentences_for_word(word, src_lang = 'und', dest_lang = 'und'):
         sentences.append(sentence)
     return sentences
 
-sentences = get_sentences_for_word('plancha', 'spa')
+sentences = get_sentences_for_word('はい')
 for sentence in sentences:
-    print smart_str(sentence)
+    #smart_str is used because when you output to a file it will throw an exception when printing directly or even using unicode()
+    print smart_str(sentence['main'])
+    for t in sentence['translations']:
+        print smart_str('\t' + t['lang'] + ':\t' + t['translation'])
+    print '----------'
