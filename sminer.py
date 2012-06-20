@@ -1,4 +1,5 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Sentence Miner (sminer)
 #
@@ -11,18 +12,19 @@
 # <insert name here>
 #
 # Dependencies:
+# - argparse (part of the standard library in 2.7)
 # - beautifulsoup4
 # - lxml (Hint for windows users: easy_install lxml==2.3)
 # - django (temporary)
 #
 # TODO list:
-# - Retrieve a list of sentences for a word
-# - Specify a source language for a word, or leave undefined
+# - DONE: Retrieve a list of sentences for a word
+# - DONE: Specify a source language for a word, or leave undefined
 # - Specify one or more target languages for sentence translations, or leave undefined to not include translations
 # - Accept command line parameters for specifying source and target languages, and words
 # - Accept a text file with a list of words
 # - Output CSV to stdout or to a file specified on the command line
-# - Allow user to specify whether to include all sentences, only the first, random, or prompt (not sure which to default yet)
+# - Allow user to specify whether to include all sentences, only the first, random, or prompt (default all)
 # - Allow user to specify how the CSV file is output, with some sensible presets
 # - Find a unicode friendly output method that doesn´t depend on django
 #
@@ -31,6 +33,7 @@
 # - Import dictionary definititions for words.
 # - GUI
 #
+import argparse
 import urllib2
 from bs4 import BeautifulSoup
 from django.utils.encoding import smart_str 
@@ -52,10 +55,23 @@ def get_sentences_for_word(word, src_lang = 'und', dest_lang = 'und'):
         sentences.append(sentence)
     return sentences
 
-sentences = get_sentences_for_word('はい')
-for sentence in sentences:
-    #smart_str is used because when you output to a file it will throw an exception when printing directly or even using unicode()
-    print smart_str(sentence['main'])
-    for t in sentence['translations']:
-        print smart_str('\t' + t['lang'] + ':\t' + t['translation'])
-    print '----------'
+def get_command_line_parser():
+    parser = argparse.ArgumentParser(description='Sentence Miner grabs sentences from a source (currently tatoeba.org) using a word list and outputs a csv file suitable for import into an SRS system like Anki.')
+    parser.add_argument('-w', '--word')
+    parser.add_argument('-s', '--src-lang', default='und')
+    parser.add_argument('-d', '--dest-lang', default='und')
+    return parser
+
+#main method starts here
+parser = get_command_line_parser()
+args = vars(parser.parse_args())
+if args['word'] != None:
+    sentences = get_sentences_for_word(args['word'], args['src_lang'], args['dest_lang'])
+    for sentence in sentences:
+        #smart_str is used because when you output to a file it will throw an exception when printing directly or even using unicode()
+        print smart_str(sentence['main'])
+        for t in sentence['translations']:
+            print smart_str('\t' + t['lang'] + ':\t' + t['translation'])
+        print '----------'
+else:
+    parser.print_help()
