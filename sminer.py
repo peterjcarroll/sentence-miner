@@ -41,7 +41,7 @@ from django.utils.encoding import smart_str
 def get_sentences_for_word(word, src_lang = 'und', dest_lang = 'und'):
     url = 'http://tatoeba.org/eng/sentences/search?query=' + word + '&from=' + src_lang + '&to=' + dest_lang
     page = urllib2.urlopen(url).read()
-    soup = BeautifulSoup(page)
+    soup = BeautifulSoup(page, "lxml")
     sentence_links = soup.select("div.mainSentence div.sentenceContent a")
     sentences = []
     for link in sentence_links:
