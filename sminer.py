@@ -20,15 +20,15 @@
 # TODO list:
 # - DONE: Retrieve a list of sentences for a word
 # - DONE: Specify a source language for a word, or leave undefined
-# - Specify one or more target languages for sentence translations, or leave undefined to not include translations
-# - Accept command line parameters for specifying source and target languages, and words
-# - Accept a text file with a list of words
+# - DONE: Specify a target languages for sentence translations, or leave undefined to include all translations
+# - DONE: Accept command line parameters for specifying source and target languages, and words
+# - DONE: Accept a text file with a list of words
 # - Output CSV to stdout or to a file specified on the command line
-# - Allow user to specify whether to include all sentences, only the first, random, or prompt (default all)
-# - Allow user to specify how the CSV file is output, with some sensible presets
 # - Find a unicode friendly output method that doesn´t depend on django
 #
 # Possible Future Features:
+# - Allow user to specify whether to include all sentences, only the first, random, or prompt (default all)
+# - Allow user to specify how the CSV file is output, with some sensible presets
 # - Import from other sources besides tatoeba.org
 # - Import dictionary definititions for words.
 # - GUI
@@ -60,18 +60,41 @@ def get_command_line_parser():
     parser.add_argument('-w', '--word')
     parser.add_argument('-s', '--src-lang', default='und')
     parser.add_argument('-d', '--dest-lang', default='und')
+    parser.add_argument('-i', '--infile')
     return parser
-
-#main method starts here
-parser = get_command_line_parser()
-args = vars(parser.parse_args())
-if args['word'] != None:
-    sentences = get_sentences_for_word(args['word'], args['src_lang'], args['dest_lang'])
+    
+def output_sentences(sentences):
     for sentence in sentences:
         #smart_str is used because when you output to a file it will throw an exception when printing directly or even using unicode()
         print smart_str(sentence['main'])
         for t in sentence['translations']:
             print smart_str('\t' + t['lang'] + ':\t' + t['translation'])
         print '----------'
-else:
-    parser.print_help()
+    
+def get_words_from_file(infile):
+    words = []
+    try:
+        f = open(infile, 'r')
+        for line in f:
+            word = line.strip()
+            if word != '':
+                words.append(word)
+        f.close()
+        return words
+    except:
+        print "Error reading from " + infile
+
+#main method starts here
+if __name__ == "__main__":
+    parser = get_command_line_parser()
+    args = vars(parser.parse_args())
+    if args['word'] != None:
+        sentences = get_sentences_for_word(args['word'], args['src_lang'], args['dest_lang'])
+        output_sentences(sentences)
+    elif args['infile'] != None:
+        words = get_words_from_file(args['infile'])
+        for word in words:
+            sentences = get_sentences_for_word(word, args['src_lang'], args['dest_lang'])
+            output_sentences(sentences)            
+    else:
+        parser.print_help()
