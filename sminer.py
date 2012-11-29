@@ -46,12 +46,13 @@ def get_sentences_for_word(word, src_lang = 'und', dest_lang = 'und'):
     sentences = []
     for link in sentence_links:
         sid = link['href'].rpartition('/')[2]
+        src_flag = soup.select("img#flag_" + sid)[0]
         translations = []
         translations_div = soup.select("div#_" + sid + "_translations")[0]
         trans_sentences_divs = translations_div.select("div.sentence")
         for div in trans_sentences_divs:
             translations.append({ 'lang': div.select("img.languageFlag")[0]['alt'], 'translation': div.div.a.string})
-        sentence = { 'main': link.string, 'translations': translations }
+        sentence = { 'main': link.string, 'main_lang': src_flag['alt'], 'translations': translations }
         sentences.append(sentence)
     return sentences
 
@@ -66,7 +67,7 @@ def get_command_line_parser():
 def output_sentences(sentences):
     for sentence in sentences:
         #smart_str is used because when you output to a file it will throw an exception when printing directly or even using unicode()
-        print smart_str(sentence['main'])
+        print smart_str(sentence['main_lang'] + ': ' + sentence['main'])
         for t in sentence['translations']:
             print smart_str('\t' + t['lang'] + ':\t' + t['translation'])
         print '----------'
@@ -83,6 +84,28 @@ def get_words_from_file(infile):
         return words
     except:
         print "Error reading from " + infile
+
+def build_output_rows(sentences):
+    langs = []
+    for sentence in sentences:
+        sentence_dict = { sentence['main_lang']: sentence['main'], }
+        if not sentence['main_lang'] in langs:
+            langs.append(sentence['main_lang'])
+        for t in sentence['translations']:
+            if not t['lang'] in langs:
+                langs.append(t['lang'])
+            if t['lang'] in sentence_dict.keys():
+                i = 1
+                while t['lang'] + str(i) in sentence_dict.keys():
+                    i+=1
+                sentence_dict[t['lang'] + str(i)] = t['translation']
+                if not t['lang'] + str(i) in langs:
+                    langs.append(t['lang'] + str(i))
+    #TODO: PJC build rows
+
+def output_csv(sentences, outfile):
+    rows = build_output_rows(sentences)
+    #TODO: PJC output to file using csv module
 
 #main method starts here
 if __name__ == "__main__":
