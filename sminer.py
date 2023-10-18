@@ -1,21 +1,15 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 #
 # Sentence Miner (sminer)
 #
 # Sentence Miner grabs sentences from a source (currently tatoeba.org) using a word list
 # and outputs a csv file suitable for import into an SRS system like Anki.
 #
-# Created by Peter Carroll <peter at peterjcarroll dot com> on June 12, 2012
+# Created by Peter Carroll on June 12, 2012
 #
 # Contributors:
 # <insert name here>
 #
-# Dependencies:
-# - argparse (part of the standard library in 2.7)
-# - beautifulsoup4
-# - lxml (Hint for windows users: easy_install lxml==2.3)
-# - django (temporary)
 #
 # TODO list:
 # - DONE: Retrieve a list of sentences for a word
@@ -34,26 +28,43 @@
 # - GUI
 #
 import argparse
-import urllib2
+import requests
 from bs4 import BeautifulSoup
-from django.utils.encoding import smart_str 
+# from django.utils.encoding import smart_str 
 
 def get_sentences_for_word(word, src_lang = 'und', dest_lang = 'und'):
-    url = 'http://tatoeba.org/eng/sentences/search?query=' + word + '&from=' + src_lang + '&to=' + dest_lang
-    page = urllib2.urlopen(url).read()
-    soup = BeautifulSoup(page, "lxml")
-    sentence_links = soup.select("div.mainSentence div.sentenceContent a")
+    url = 'https://tatoeba.org/en/sentences/search?query=' + word + '&from=' + src_lang + '&to=' + dest_lang
+    page = requests.get(url)
+    # print(page.content)
+    soup = BeautifulSoup(page.content, features="html.parser")
+    # sentence_links = soup.select("div.mainSentence div.sentenceContent a")
+    
+    sentence_elements = soup.select("div.sentence-and-translations")
+
     sentences = []
-    for link in sentence_links:
-        sid = link['href'].rpartition('/')[2]
-        src_flag = soup.select("img#flag_" + sid)[0]
-        translations = []
-        translations_div = soup.select("div#_" + sid + "_translations")[0]
-        trans_sentences_divs = translations_div.select("div.sentence")
-        for div in trans_sentences_divs:
-            translations.append({ 'lang': div.select("img.languageFlag")[0]['alt'], 'translation': div.div.a.string})
-        sentence = { 'main': link.string, 'main_lang': src_flag['alt'], 'translations': translations }
-        sentences.append(sentence)
+    for sentence_element in sentence_elements:
+        # TODO: continue here
+        pass
+        # # Find the element containing the Spanish sentence
+        # spanish_sentence_element = sentence_element.find('div', {'ng-cloak': True, 'ng-init': 'vm.init([], {"lang":"spa"'})
+        # spanish_sentence = spanish_sentence_element['data-text']
+        # print(spanish_sentence)
+
+        # # Find the element containing the English translation
+        # english_translation_element = sentence_element.find('div', {'ng-cloak': True, 'ng-init': 'vm.init([], {"lang":"eng"'})
+        # english_translation = english_translation_element['data-text']
+        # print(english_translation)
+        
+    # for link in sentence_links:
+    #     sid = link['href'].rpartition('/')[2]
+    #     src_flag = soup.select("img#flag_" + sid)[0]
+    #     translations = []
+    #     translations_div = soup.select("div#_" + sid + "_translations")[0]
+    #     trans_sentences_divs = translations_div.select("div.sentence")
+    #     for div in trans_sentences_divs:
+    #         translations.append({ 'lang': div.select("img.languageFlag")[0]['alt'], 'translation': div.div.a.string})
+    #     sentence = { 'main': link.string, 'main_lang': src_flag['alt'], 'translations': translations }
+    #     sentences.append(sentence)
     return sentences
 
 def get_command_line_parser():
@@ -67,10 +78,10 @@ def get_command_line_parser():
 def output_sentences(sentences):
     for sentence in sentences:
         #smart_str is used because when you output to a file it will throw an exception when printing directly or even using unicode()
-        print smart_str(sentence['main_lang'] + ': ' + sentence['main'])
+        print(sentence['main_lang'] + ': ' + sentence['main'])
         for t in sentence['translations']:
-            print smart_str('\t' + t['lang'] + ':\t' + t['translation'])
-        print '----------'
+            print('\t' + t['lang'] + ':\t' + t['translation'])
+        print('----------')
     
 def get_words_from_file(infile):
     words = []
@@ -83,7 +94,7 @@ def get_words_from_file(infile):
         f.close()
         return words
     except:
-        print "Error reading from " + infile
+        print("Error reading from " + infile)
 
 def build_output_rows(sentences):
     langs = []
